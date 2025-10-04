@@ -80,18 +80,24 @@
     }).addTo(map);
 
     // Geolocalización del usuario
-    map.locate({setView: true, maxZoom: 16});
+    map.locate({setView: false, maxZoom: 16});
     map.on('locationfound', function(e){
       L.marker(e.latlng).addTo(map).bindPopup("📍 Estás aquí");
     });
 
     // Icono personalizado con logo de Guía 23
     var clubIcon = L.icon({
-      iconUrl: 'https://www.guia23.com/images/club23-logo.png', // logo de los locales
-      iconSize: [40, 40], // tamaño del icono
-      iconAnchor: [20, 40], // punto del icono que corresponde a la ubicación
-      popupAnchor: [0, -40] // punto del popup relativo al icono
+      iconUrl: 'https://www.guia23.com/images/club23-logo.png',
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -40]
     });
+
+    // Centros de las ciudades
+    var ciudades = {
+      "La Rioja": [-29.4131, -66.8558],
+      "Carlos Paz": [-31.420, -64.500]
+    };
 
     // Lista de beneficios con ciudad
     var beneficios = [
@@ -115,6 +121,11 @@
     function updateMarkers() {
       var checkedCats = Array.from(document.querySelectorAll('.filters input:checked')).map(cb => cb.value);
       var ciudad = document.getElementById('ciudadFilter').value;
+
+      // Centrar mapa en la ciudad seleccionada
+      if (ciudad !== "Todas" && ciudades[ciudad]) {
+        map.setView(ciudades[ciudad], 13);
+      }
 
       markers.forEach(m => {
         var mostrar = checkedCats.includes(m.categoria) && (ciudad === "Todas" || m.ciudad === ciudad);
