@@ -34,10 +34,14 @@
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-    .filters label {
+    .filters label, .filters select {
       display: block;
       margin-bottom: 5px;
       cursor: pointer;
+    }
+    .filters select {
+      width: 100%;
+      padding: 3px;
     }
   </style>
 </head>
@@ -49,6 +53,13 @@
 
   <!-- Filtros -->
   <div class="filters">
+    <label>Ciudad:
+      <select id="ciudadFilter">
+        <option value="Todas">Todas</option>
+        <option value="La Rioja">La Rioja</option>
+        <option value="Carlos Paz">Carlos Paz</option>
+      </select>
+    </label>
     <label><input type="checkbox" value="Restaurante" checked> 🍽 Restaurantes</label>
     <label><input type="checkbox" value="Hotel" checked> 🏨 Hoteles</label>
     <label><input type="checkbox" value="Café" checked> ☕ Cafés</label>
@@ -63,7 +74,7 @@
     // Crear mapa centrado en La Rioja
     var map = L.map('map').setView([-29.4131, -66.8558], 13);
 
-    // Capa base (OpenStreetMap)
+    // Capa base
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: 'Mapa Club 23'
     }).addTo(map);
@@ -74,39 +85,49 @@
       L.marker(e.latlng).addTo(map).bindPopup("📍 Estás aquí");
     });
 
-    // Lista de beneficios (ejemplo)
+    // Icono personalizado con logo de Guía 23
+    var clubIcon = L.icon({
+      iconUrl: 'https://www.guia23.com/images/club23-logo.png', // logo de los locales
+      iconSize: [40, 40], // tamaño del icono
+      iconAnchor: [20, 40], // punto del icono que corresponde a la ubicación
+      popupAnchor: [0, -40] // punto del popup relativo al icono
+    });
+
+    // Lista de beneficios con ciudad
     var beneficios = [
-      {nombre: "🍽 Restaurante El Buen Sabor", categoria: "Restaurante", lat: -29.412, lng: -66.856, promo: "10% de descuento con Club 23"},
-      {nombre: "🏨 Hotel Sol y Luna", categoria: "Hotel", lat: -29.418, lng: -66.860, promo: "2x1 en desayunos"},
-      {nombre: "☕ Café Aroma", categoria: "Café", lat: -29.415, lng: -66.853, promo: "2da bebida gratis"},
-      {nombre: "🍻 Bar La Noche", categoria: "Bar", lat: -29.417, lng: -66.858, promo: "Happy Hour hasta las 22hs"}
+      {nombre: "🍽 Restaurante El Buen Sabor", categoria: "Restaurante", ciudad: "La Rioja", lat: -29.412, lng: -66.856, promo: "10% de descuento con Club 23"},
+      {nombre: "🏨 Hotel Sol y Luna", categoria: "Hotel", ciudad: "Carlos Paz", lat: -31.420, lng: -64.500, promo: "2x1 en desayunos"},
+      {nombre: "☕ Café Aroma", categoria: "Café", ciudad: "La Rioja", lat: -29.415, lng: -66.853, promo: "2da bebida gratis"},
+      {nombre: "🍻 Bar La Noche", categoria: "Bar", ciudad: "Carlos Paz", lat: -31.421, lng: -64.502, promo: "Happy Hour hasta las 22hs"}
     ];
 
-    // Crear marcadores
+    // Crear marcadores con icono personalizado
     var markers = [];
     beneficios.forEach(b => {
-      var marker = L.marker([b.lat, b.lng]).bindPopup(`<b>${b.nombre}</b><br>${b.promo}`);
+      var marker = L.marker([b.lat, b.lng], {icon: clubIcon}).bindPopup(`<b>${b.nombre}</b><br>${b.promo}`);
       marker.categoria = b.categoria;
+      marker.ciudad = b.ciudad;
       marker.addTo(map);
       markers.push(marker);
     });
 
-    // Función para actualizar marcadores según filtros
+    // Función para actualizar según filtros y ciudad
     function updateMarkers() {
-      var checked = Array.from(document.querySelectorAll('.filters input:checked')).map(cb => cb.value);
+      var checkedCats = Array.from(document.querySelectorAll('.filters input:checked')).map(cb => cb.value);
+      var ciudad = document.getElementById('ciudadFilter').value;
+
       markers.forEach(m => {
-        if (checked.includes(m.categoria)) {
-          map.addLayer(m);
-        } else {
-          map.removeLayer(m);
-        }
+        var mostrar = checkedCats.includes(m.categoria) && (ciudad === "Todas" || m.ciudad === ciudad);
+        if (mostrar) map.addLayer(m);
+        else map.removeLayer(m);
       });
     }
 
-    // Escuchar cambios en los filtros
+    // Escuchar cambios en filtros y select
     document.querySelectorAll('.filters input').forEach(cb => {
       cb.addEventListener('change', updateMarkers);
     });
+    document.getElementById('ciudadFilter').addEventListener('change', updateMarkers);
   </script>
 </body>
 </html>
