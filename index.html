@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mapa Club 23</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; }
+    #map { height: 100%; width: 100%; }
+
+    /* Logo Club 23 */
+    .logo {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 6px 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .logo img {
+      width: 90px;
+    }
+
+    /* Panel de filtros */
+    .filters {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .filters label {
+      display: block;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo Club 23 -->
+  <div class="logo">
+    <img src="https://www.guia23.com/images/club23-logo.png" alt="Club 23">
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <label><input type="checkbox" value="Restaurante" checked> 🍽 Restaurantes</label>
+    <label><input type="checkbox" value="Hotel" checked> 🏨 Hoteles</label>
+    <label><input type="checkbox" value="Café" checked> ☕ Cafés</label>
+    <label><input type="checkbox" value="Bar" checked> 🍻 Bares</label>
+  </div>
+
+  <!-- Mapa -->
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Crear mapa centrado en La Rioja
+    var map = L.map('map').setView([-29.4131, -66.8558], 13);
+
+    // Capa base (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Mapa Club 23'
+    }).addTo(map);
+
+    // Geolocalización del usuario
+    map.locate({setView: true, maxZoom: 16});
+    map.on('locationfound', function(e){
+      L.marker(e.latlng).addTo(map).bindPopup("📍 Estás aquí");
+    });
+
+    // Lista de beneficios (ejemplo)
+    var beneficios = [
+      {nombre: "🍽 Restaurante El Buen Sabor", categoria: "Restaurante", lat: -29.412, lng: -66.856, promo: "10% de descuento con Club 23"},
+      {nombre: "🏨 Hotel Sol y Luna", categoria: "Hotel", lat: -29.418, lng: -66.860, promo: "2x1 en desayunos"},
+      {nombre: "☕ Café Aroma", categoria: "Café", lat: -29.415, lng: -66.853, promo: "2da bebida gratis"},
+      {nombre: "🍻 Bar La Noche", categoria: "Bar", lat: -29.417, lng: -66.858, promo: "Happy Hour hasta las 22hs"}
+    ];
+
+    // Crear marcadores
+    var markers = [];
+    beneficios.forEach(b => {
+      var marker = L.marker([b.lat, b.lng]).bindPopup(`<b>${b.nombre}</b><br>${b.promo}`);
+      marker.categoria = b.categoria;
+      marker.addTo(map);
+      markers.push(marker);
+    });
+
+    // Función para actualizar marcadores según filtros
+    function updateMarkers() {
+      var checked = Array.from(document.querySelectorAll('.filters input:checked')).map(cb => cb.value);
+      markers.forEach(m => {
+        if (checked.includes(m.categoria)) {
+          map.addLayer(m);
+        } else {
+          map.removeLayer(m);
+        }
+      });
+    }
+
+    // Escuchar cambios en los filtros
+    document.querySelectorAll('.filters input').forEach(cb => {
+      cb.addEventListener('change', updateMarkers);
+    });
+  </script>
+</body>
+</html>
